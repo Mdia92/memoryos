@@ -1,0 +1,57 @@
+# MemoryOS policy-as-code.
+# Behavior changes through configuration rather than redeployment.
+
+confidence:
+  # Weighted formula — every term is measurable, nothing is invented:
+  #   confidence = 0.40 * corroboration + 0.30 * recency
+  #              + 0.20 * verification  + 0.10 * user_confirmation
+  weights:
+    corroboration: 0.40
+    recency: 0.30
+    verification: 0.20
+    user_confirmation: 0.10
+
+gates:
+  # What the agent is allowed to do at a given confidence level.
+  act: 0.80          # >= 0.80 → act autonomously
+  show_sources: 0.40 # >= 0.40 → answer, but always surface the evidence
+  # < show_sources  → ask a clarifying question instead of guessing
+  # Regardless of absolute confidence: if two competing values for the same
+  # key are within `ambiguity_margin` of each other, ask instead of acting.
+  ambiguity_margin: 0.15
+
+decay:
+  # Uncorroborated memories fade faster than corroborated ones.
+  # Half-life (days) of the recency term, keyed by distinct-origin count.
+  half_life_days:
+    single_source: 180   # ~6 months
+    two_sources: 360     # ~12 months
+    multi_source: 540    # ~18 months
+  multi_source_min: 3
+  stale_below: 0.30      # recency score below this → memory flagged stale
+
+corroboration:
+  # Diminishing returns: repeated confirmations from the SAME origin count
+  # far less than confirmations from independent origins.
+  same_origin_weight: 0.25
+  # Saturation constant: score = 1 - exp(-(n_effective - 1) / k)
+  saturation_k: 2.0
+
+patterns:
+  # A pattern is promoted to trusted knowledge only when several sourced
+  # episodes agree with each other.
+  min_support: 3
+  min_sessions: 2
+
+auditor:
+  # A contradiction is resolved (loser superseded) when the confidence gap
+  # exceeds this margin; inside the margin it stays open and the agent asks.
+  supersede_margin: 0.25
+  # Ignore challengers so weak they are probably noise.
+  noise_floor: 0.15
+
+limits:
+  # Hard constraints — the agent can never loop or spend without bound.
+  max_llm_calls_per_ingest: 3
+  max_facts_per_key: 4
+  llm_timeout_seconds: 30
