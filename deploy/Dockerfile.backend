@@ -1,0 +1,14 @@
+FROM python:3.11-slim
+
+WORKDIR /srv/memoryos
+
+COPY backend/pyproject.toml backend/pyproject.toml
+COPY backend/app backend/app
+COPY backend/evals backend/evals
+COPY backend/config backend/config
+
+RUN pip install --no-cache-dir ./backend
+
+WORKDIR /srv/memoryos/backend
+EXPOSE 8000
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

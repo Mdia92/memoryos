@@ -1,0 +1,16 @@
+FROM node:20-alpine AS build
+WORKDIR /app
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci
+COPY frontend .
+# Empty NEXT_PUBLIC_API_URL → the browser calls same-origin /api/* (nginx routes it).
+ARG NEXT_PUBLIC_API_URL=""
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+RUN npm run build
+
+FROM node:20-alpine
+WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app ./
+EXPOSE 3002
+CMD ["npm", "start", "--", "--port", "3002"]
