@@ -59,15 +59,33 @@ async def extract_assertions(
     return assertions, provider
 
 
-async def map_question_to_key(question: str, known_keys: list[str]) -> tuple[str | None, str]:
-    """Map a free-text question to one of the known memory keys."""
+def _stem(token: str) -> str:
+    return token[:-1] if token.endswith("s") and len(token) > 3 else token
+
+
+async def map_question_to_key(
+    question: str,
+    known_keys: list[str],
+    key_values: dict[str, list[str]] | None = None,
+) -> tuple[str | None, str]:
+    """Map a free-text question to one of the known memory keys.
+
+    `key_values` (optional) maps each key to values seen in memory, so the
+    rules fallback can match "remote or office?" → meeting_mode even when
+    the key name itself never appears in the question.
+    """
 
     def rules_fallback() -> dict:
-        # Keyword overlap between question tokens and key tokens.
-        q_tokens = set(question.lower().replace("?", " ").split())
+        q_tokens = {_stem(t) for t in question.lower().replace("?", " ").split()}
         best, best_score = None, 0
         for key in known_keys:
-            score = len(q_tokens & set(key.split("_")))
+            key_tokens = {_stem(t) for t in key.split("_")}
+            value_tokens = {
+                _stem(t)
+                for v in (key_values or {}).get(key, [])
+                for t in v.lower().split()
+            }
+            score = 2 * len(q_tokens & key_tokens) + len(q_tokens & value_tokens)
             if score > best_score:
                 best, best_score = key, score
         return {"key": best}

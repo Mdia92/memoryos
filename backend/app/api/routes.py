@@ -303,7 +303,12 @@ async def ask(request: Request, body: AskIn):
     policy = get_policy()
     now = _now()
 
-    key, mapping_provider = await map_question_to_key(body.question, _known_keys(state))
+    key_values: dict[str, list[str]] = {}
+    for fact in state.facts.values():
+        key_values.setdefault(fact.key, []).append(fact.value)
+    key, mapping_provider = await map_question_to_key(
+        body.question, _known_keys(state), key_values
+    )
     if key is None:
         return {
             "question": body.question,

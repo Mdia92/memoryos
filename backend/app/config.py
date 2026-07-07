@@ -24,7 +24,7 @@ class Settings(BaseSettings):
     qwen_fallback_model: str = "qwen-turbo"
     qwen_embedding_model: str = "text-embedding-v3"
 
-    database_url: str = "postgresql+asyncpg://memoryos:memoryos@localhost:5433/memoryos"
+    database_url: str = "postgresql+asyncpg://memoryos:memoryos@localhost:5434/memoryos"
     cors_origins: str = "http://localhost:3000"
 
     @property
