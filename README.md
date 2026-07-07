@@ -81,7 +81,22 @@ Next.js + Recharts, live over SSE:
 - **Auditor** — open contradictions with one-click human resolution; the append-only audit trail.
 - **Ask** — one question, two memories side by side: a traditional last-wins memory (fluent, sourceless) vs MemoryOS (gated, cited, honest about conflicts).
 
-## Quickstart (local)
+## Quick start — one command
+
+```bash
+cp .env.example .env              # set DASHSCOPE_API_KEY to enable the Qwen slow path
+docker compose -f deploy/docker-compose.prod.yml --env-file .env up -d --build
+```
+
+Open **http://localhost** — dashboard, API, and database all run self-contained. Seed the cross-session story:
+
+```bash
+curl -X POST localhost/api/demo/seed -H "Content-Type: application/json" -d '{"sessions": 20}'
+```
+
+Without a Qwen key the system still works — it falls back to deterministic rules and the UI shows `rules-only` as the provider.
+
+### Local development (without Docker)
 
 ```bash
 # 1. database (PostgreSQL + pgvector)
@@ -96,12 +111,7 @@ python -m uvicorn app.main:app --port 8000
 cd ../frontend
 npm install
 npm run dev -- --port 3002       # → http://localhost:3002
-
-# 4. seed the cross-session story and explore
-curl -X POST localhost:8000/api/demo/seed -H "Content-Type: application/json" -d '{"sessions": 20}'
 ```
-
-Copy `.env.example` → `.env` and set `DASHSCOPE_API_KEY` to enable the Qwen slow path (without it, the rules-only fallback runs and the UI shows `rules-only` as the provider).
 
 Tests: `cd backend && pytest` (22 unit tests on confidence math, decay, merging, and auditor behavior). Lint: `ruff check backend`.
 
