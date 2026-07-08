@@ -158,6 +158,9 @@ export default function AskPage() {
                   {new Date(response.baseline.source.occurred_at).toLocaleDateString()}
                 </li>
               ) : null}
+              {response.path === "hybrid-retrieval" && !response.baseline ? (
+                <li>· no tracked key — this baseline is only defined for tracked facts</li>
+              ) : null}
             </ul>
           </section>
 
@@ -165,6 +168,11 @@ export default function AskPage() {
             <div className="mb-3 flex items-center gap-2">
               <h3 className="text-sm font-semibold">MemoryOS</h3>
               {d ? <GateBadge gate={d.gate} /> : null}
+              {response.path ? (
+                <span className="mono rounded-md border border-line bg-panel-2 px-1.5 py-0.5 text-[10px] text-muted">
+                  {response.path}
+                </span>
+              ) : null}
               {response.providers.answer ? (
                 <span className="mono ml-auto text-[10px] text-muted">
                   {response.providers.answer}
@@ -174,11 +182,19 @@ export default function AskPage() {
             <p className="text-sm leading-relaxed">{response.answer}</p>
             {d ? (
               <div className="mt-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-muted">Confidence</span>
-                  <ConfidenceBar value={d.confidence} />
-                  <span className="mono ml-auto text-[11px] text-muted">{d.key}</span>
-                </div>
+                {d.confidence !== null ? (
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-muted">Confidence</span>
+                    <ConfidenceBar value={d.confidence} />
+                    {d.key ? (
+                      <span className="mono ml-auto text-[11px] text-muted">{d.key}</span>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-3 text-xs text-muted">
+                    <span>Answered from retrieved events (no tracked fact yet)</span>
+                  </div>
+                )}
                 {d.competing_values?.length ? (
                   <div className="rounded-lg border border-danger/30 bg-danger/5 px-3 py-2 text-xs">
                     <span className="font-semibold text-danger">Contradiction on file: </span>

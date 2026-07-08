@@ -93,12 +93,12 @@ export interface Stats {
 }
 
 export interface Decision {
-  key: string;
+  key: string | null;
   value: string | null;
   statement?: string;
   fact_id?: string;
-  confidence: number;
-  gate: "act" | "show_sources" | "ask";
+  confidence: number | null;
+  gate: "act" | "show_sources" | "ask" | "unknown";
   reason: string;
   margin?: number | null;
   competing_values?: { value: string; confidence: number; sources: number }[];
@@ -111,6 +111,7 @@ export interface AskResponse {
   key: string | null;
   answer: string;
   decision: Decision | null;
+  path?: "tracked-fact" | "hybrid-retrieval" | "abstain";
   baseline?: {
     value: string | null;
     answer: string;
