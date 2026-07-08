@@ -198,6 +198,17 @@ npm run dev -- --port 3002       # → http://localhost:3002
 
 Tests: `cd backend && pytest` (22 unit tests on confidence math, decay, merging, and auditor behavior). Lint: `ruff check backend`.
 
+## Docs
+
+- [docs/deploy-alibaba.md](docs/deploy-alibaba.md) — end-to-end Alibaba Cloud walkthrough
+- [docs/deployment-notes.md](docs/deployment-notes.md) — env vars, docker commands, backups, cost expectations
+- [docs/security.md](docs/security.md) — data flow, key handling, prompt-injection surface, prototype scope
+- [docs/comparison.md](docs/comparison.md) — why not just use RAG / Mem0 / LangGraph
+- [docs/longmemeval-results.md](docs/longmemeval-results.md) — per-category benchmark breakdown
+- [docs/eval-methodology.md](docs/eval-methodology.md) — dataset design, metrics, threats to validity
+- [docs/demo-script.md](docs/demo-script.md) — the ~3 min video storyboard
+- [docs/blog-post.md](docs/blog-post.md) — publishable write-up on the evidence-vs-retrieval thesis
+
 ## Alibaba Cloud deployment
 
 The same containers run unchanged on Alibaba Cloud — see [docs/deploy-alibaba.md](docs/deploy-alibaba.md):
