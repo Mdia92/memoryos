@@ -80,23 +80,30 @@ Show the repo README + architecture diagram for the final two seconds.
 
 ---
 
-## Bonus scene: real notes ingest (record separately if time permits)
+## Bonus scene: real ingestion (record separately if time permits)
 
 Position: Alongside the main video or as a follow-up short.
 
 ```bash
-# Point at any folder of .md files
+# 1) Markdown notes vault (Obsidian, Bear, .md folder)
 python -m evals.ingest_markdown \
   --path ~/my-notes --api http://8.219.249.248
+
+# 2) Calendar file (Google Calendar → export → .ics)
+python -m evals.ingest_ics \
+  --path ~/my-calendar.ics --api http://8.219.249.248
 ```
 
 On screen: watch each file post to the backend, Qwen extract structured
-assertions live (`primary_language=Rust`, `city_of_residence=Berlin`),
-confidence scores climb, and — if the notes mention conflicting things — the
-Auditor page pop up a new open contradiction in real time.
+assertions live (`primary_language=Rust`, `meeting_time_preference=morning`),
+confidence scores climb. Real calendars with `RECURRENCE-ID` reschedule
+events flow into the pattern layer — the `weekend_avoidance` and
+`late_night_activity` detectors fire on live data. If the notes mention
+conflicting things, the Auditor page pops up a new open contradiction in
+real time.
 
-Line: *"This isn't a rehearsed dataset. This is a real folder. MemoryOS
-just built the evidence chain from scratch."*
+Line: *"This isn't a rehearsed dataset. This is my own notes folder and my
+own calendar. MemoryOS just built the evidence chain from scratch."*
 
 ---
 

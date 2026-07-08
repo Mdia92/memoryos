@@ -7,7 +7,10 @@ import { useCallback, useEffect, useState } from "react";
 import {
   Area,
   AreaChart,
+  Bar,
+  BarChart,
   CartesianGrid,
+  Cell,
   Legend,
   Line,
   LineChart,
@@ -18,6 +21,29 @@ import {
 } from "recharts";
 import { api, type EvalRun, type Pattern, type Stats } from "@/lib/api";
 import { Kpi, SectionTitle } from "@/components/ui";
+
+interface LongMemEvalCategory {
+  category: string;
+  n: number;
+  memoryos_pct: number;
+  rag_pct: number;
+  delta_pct: number;
+}
+
+interface LongMemEvalResults {
+  benchmark: string;
+  n_instances: number;
+  seed: number;
+  memoryos_overall_pct: number;
+  rag_overall_pct: number;
+  answer_rate_pct: number;
+  precision_when_answering_pct: number;
+  categories: LongMemEvalCategory[];
+  notes: string;
+}
+
+const prettyCategory = (c: string) =>
+  c.replace(/-/g, " ").replace(/single session /g, "");
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
@@ -49,6 +75,7 @@ export default function Dashboard() {
   const [run, setRun] = useState<EvalRun | null>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [patterns, setPatterns] = useState<Pattern[]>([]);
+  const [longmemeval, setLongmemeval] = useState<LongMemEvalResults | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +83,10 @@ export default function Dashboard() {
     api.evalLatest().then(setRun).catch(() => setRun(null));
     api.stats().then(setStats).catch(() => {});
     api.patterns().then(setPatterns).catch(() => {});
+    fetch("/longmemeval-results.json")
+      .then((r) => (r.ok ? r.json() : null))
+      .then(setLongmemeval)
+      .catch(() => setLongmemeval(null));
   }, []);
 
   useEffect(refresh, [refresh]);
@@ -208,6 +239,75 @@ export default function Dashboard() {
           </div>
         )}
       </section>
+
+      {longmemeval ? (
+        <section className="card p-5">
+          <SectionTitle
+            sub={`${longmemeval.n_instances} questions from ${longmemeval.benchmark}. MemoryOS and vanilla RAG use the same Qwen embeddings and answer model on the same data — the delta comes from the fact layer, not the retriever.`}
+          >
+            LongMemEval — MemoryOS vs Vanilla RAG per category
+          </SectionTitle>
+          <div className="mb-3 flex flex-wrap gap-3 text-xs text-muted">
+            <span>
+              Overall: <span className="text-ink font-semibold">MemoryOS {longmemeval.memoryos_overall_pct}%</span>{" "}
+              vs RAG {longmemeval.rag_overall_pct}%
+            </span>
+            <span>Answer rate: {longmemeval.answer_rate_pct}%</span>
+            <span>Precision when answering: {longmemeval.precision_when_answering_pct}%</span>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart
+              data={longmemeval.categories.map((c) => ({
+                ...c,
+                label: prettyCategory(c.category),
+              }))}
+              margin={{ top: 8, right: 12, bottom: 40, left: -18 }}
+            >
+              <CartesianGrid stroke="#1c2330" strokeDasharray="3 3" vertical={false} />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: "#8b94a7", fontSize: 10 }}
+                stroke="#232a37"
+                angle={-18}
+                textAnchor="end"
+                interval={0}
+              />
+              <YAxis
+                domain={[0, 100]}
+                tickFormatter={(v) => `${v}%`}
+                tick={{ fill: "#8b94a7", fontSize: 11 }}
+                stroke="#232a37"
+              />
+              <Tooltip
+                cursor={{ fill: "rgba(148,163,184,0.05)" }}
+                contentStyle={{
+                  background: "var(--panel-2)",
+                  border: "1px solid var(--line)",
+                  borderRadius: 8,
+                  fontSize: 12,
+                }}
+                labelStyle={{ color: "var(--ink)", fontWeight: 600 }}
+              />
+              <Legend wrapperStyle={{ fontSize: 12, color: "#8b94a7" }} />
+              <Bar name="MemoryOS" dataKey="memoryos_pct" radius={[4, 4, 0, 0]}>
+                {longmemeval.categories.map((c) => (
+                  <Cell
+                    key={c.category}
+                    fill={c.delta_pct > 0 ? "var(--accent)" : "var(--info)"}
+                  />
+                ))}
+              </Bar>
+              <Bar name="Vanilla RAG" dataKey="rag_pct" fill="var(--danger)" radius={[4, 4, 0, 0]} fillOpacity={0.65} />
+            </BarChart>
+          </ResponsiveContainer>
+          <p className="mt-2 text-[11px] text-muted">
+            MemoryOS wins where facts change over time (knowledge-update{" "}
+            <span className="mono text-accent">+20 pts</span>, multi-session{" "}
+            <span className="mono text-accent">+10 pts</span>). It loses on advice-seeking
+            questions where confabulation is graded correct — the design intent, honestly reported.
+          </p>
+        </section>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="card p-5">

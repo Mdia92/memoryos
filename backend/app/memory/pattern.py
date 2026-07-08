@@ -57,7 +57,62 @@ def _detect_monday_reschedules(events: list[MemoryEvent]) -> list:
     ]
 
 
-DETECTORS: list[Detector] = [_detect_post_break_reschedules, _detect_monday_reschedules]
+LATE_NIGHT_HOURS = {21, 22, 23, 0, 1, 2, 3, 4}
+
+
+def _detect_late_night_activity(events: list[MemoryEvent]) -> list:
+    """User is regularly active outside 8am-8pm."""
+    return [
+        (
+            "late_night_activity",
+            "The user is regularly active late at night (21:00 – 04:59).",
+            ev,
+        )
+        for ev in events
+        if ev.occurred_at.hour in LATE_NIGHT_HOURS
+    ]
+
+
+def _detect_weekend_avoidance(events: list[MemoryEvent]) -> list:
+    """No or very few events on Saturday/Sunday relative to weekdays.
+
+    Deterministic rule: fire once at the earliest Monday event whose preceding
+    week had >= 5 weekday events but 0 weekend events. Uses the earliest such
+    event as anchor so support grows as more clean weeks accumulate.
+    """
+    ordered = sorted(events, key=lambda e: e.occurred_at)
+    # Bucket by ISO week
+    by_week: dict[tuple[int, int], dict[str, list[MemoryEvent]]] = {}
+    for ev in ordered:
+        year, week, _ = ev.occurred_at.isocalendar()
+        bucket = by_week.setdefault((year, week), {"weekday": [], "weekend": []})
+        if ev.occurred_at.weekday() >= 5:
+            bucket["weekend"].append(ev)
+        else:
+            bucket["weekday"].append(ev)
+
+    hits = []
+    for (_year, _week), b in sorted(by_week.items()):
+        if len(b["weekday"]) >= 5 and not b["weekend"]:
+            # One hit per weekday event that week, so support scales with
+            # observed activity and the confidence formula stays honest.
+            for ev in b["weekday"]:
+                hits.append(
+                    (
+                        "weekend_avoidance",
+                        "The user does not schedule activity on weekends; workflow is Mon–Fri.",
+                        ev,
+                    )
+                )
+    return hits
+
+
+DETECTORS: list[Detector] = [
+    _detect_post_break_reschedules,
+    _detect_monday_reschedules,
+    _detect_late_night_activity,
+    _detect_weekend_avoidance,
+]
 
 
 def scan_patterns(state: MemoryState, now: datetime, policy: dict) -> list[dict]:

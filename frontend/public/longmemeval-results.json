@@ -1,0 +1,66 @@
+{
+  "benchmark": "LongMemEval (ICLR 2025) \u2014 oracle variant",
+  "n_instances": 60,
+  "seed": 42,
+  "memoryos_overall_pct": 65.0,
+  "rag_overall_pct": 73.3,
+  "answer_rate_pct": 78.3,
+  "precision_when_answering_pct": 61.7,
+  "categories": [
+    {
+      "category": "knowledge-update",
+      "n": 10,
+      "memoryos_correct": 10,
+      "rag_correct": 8,
+      "memoryos_pct": 100.0,
+      "rag_pct": 80.0,
+      "delta_pct": 20.0
+    },
+    {
+      "category": "multi-session",
+      "n": 10,
+      "memoryos_correct": 6,
+      "rag_correct": 5,
+      "memoryos_pct": 60.0,
+      "rag_pct": 50.0,
+      "delta_pct": 10.0
+    },
+    {
+      "category": "single-session-assistant",
+      "n": 10,
+      "memoryos_correct": 1,
+      "rag_correct": 3,
+      "memoryos_pct": 10.0,
+      "rag_pct": 30.0,
+      "delta_pct": -20.0
+    },
+    {
+      "category": "single-session-preference",
+      "n": 10,
+      "memoryos_correct": 4,
+      "rag_correct": 9,
+      "memoryos_pct": 40.0,
+      "rag_pct": 90.0,
+      "delta_pct": -50.0
+    },
+    {
+      "category": "single-session-user",
+      "n": 10,
+      "memoryos_correct": 10,
+      "rag_correct": 10,
+      "memoryos_pct": 100.0,
+      "rag_pct": 100.0,
+      "delta_pct": 0.0
+    },
+    {
+      "category": "temporal-reasoning",
+      "n": 10,
+      "memoryos_correct": 8,
+      "rag_correct": 9,
+      "memoryos_pct": 80.0,
+      "rag_pct": 90.0,
+      "delta_pct": -10.0
+    }
+  ],
+  "notes": "MemoryOS vs vanilla-RAG on same Qwen embeddings + top-5 retrieval."
+}

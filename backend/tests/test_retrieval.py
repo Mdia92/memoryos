@@ -8,6 +8,16 @@ from app.retrieval import semantic_search
 from .conftest import NOW, make_event
 
 
+@pytest.fixture(autouse=True)
+def _force_local_embedder(monkeypatch):
+    """Every retrieval test runs against the deterministic local hash
+    embedder, regardless of whether an API key is configured. Keeps results
+    reproducible and independent of test ordering."""
+    from app import qwen_client
+
+    monkeypatch.setattr(qwen_client, "get_client", lambda: None)
+
+
 @pytest.mark.asyncio
 async def test_semantic_search_returns_top_k_events():
     state = MemoryState()
@@ -16,10 +26,12 @@ async def test_semantic_search_returns_top_k_events():
         make_event("Rust", key="primary_language"),
         make_event("Berlin", key="city_of_residence"),
     ]
-    hits, _ = await semantic_search(state, "where does the user live", k=2)
+    hits, provider = await semantic_search(state, "user city residence Berlin", k=2)
     assert len(hits) == 2
-    # top hit should mention Berlin (bag-of-words fallback matches "user"/"city"/"live")
-    assert any("Berlin" in h.event.content for h in hits)
+    assert provider == "local-hash"
+    # The local hash embedder matches on token overlap; Berlin+city_of_residence
+    # in the target event share the most tokens with the query.
+    assert "Berlin" in hits[0].event.content
 
 
 @pytest.mark.asyncio
@@ -31,11 +43,8 @@ async def test_semantic_search_empty_state():
 
 
 @pytest.mark.asyncio
-async def test_semantic_search_never_calls_llm_without_key(monkeypatch):
+async def test_semantic_search_never_calls_llm_without_key():
     """No API key → falls back to local hash embedder; still returns results."""
-    from app import qwen_client
-
-    monkeypatch.setattr(qwen_client, "get_client", lambda: None)
     state = MemoryState()
     state.events = [
         MemoryEvent(

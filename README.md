@@ -124,21 +124,29 @@ curl -X POST localhost/api/demo/seed -H "Content-Type: application/json" -d '{"s
 
 Without a Qwen key the system still works — it falls back to deterministic rules and the UI shows `rules-only` as the provider.
 
-### Ingest your own notes
+### Ingest your own data
 
-Point MemoryOS at a folder of markdown files (Obsidian, Bear, plain `.md`) and
-watch it extract structured facts with full provenance:
+Two real-world adapters ship in `backend/evals/`. Both go through the same
+engine as `POST /api/events` — corroboration, contradictions, confidence,
+decay all apply.
 
 ```bash
 cd backend
+
+# Markdown notes vault (Obsidian, Bear, plain .md)
 python -m evals.ingest_markdown --path ~/notes --api http://localhost:8000
 # per-file output: 2026-03-15-standup.md -> qwen-plus: [primary_language=Rust]
+
+# .ics calendar export (Google Calendar → Settings → Export)
+python -m evals.ingest_ics --path ~/calendar.ics --api http://localhost:8000
+# per-event output: 2026-03-15 Team standup -> [meeting_mode=Zoom]
 ```
 
-Files with a `YYYY-MM-DD` prefix use that as `occurred_at`; otherwise the
-file's mtime. Frontmatter is stripped. Long files chunk at ~800 words so
-extraction sees coherent context. Every extracted fact goes through the
-normal engine — corroboration, contradiction detection, confidence, decay.
+For markdown: files with a `YYYY-MM-DD` prefix use that as `occurred_at`;
+otherwise the file's mtime. Frontmatter is stripped. Long files chunk at
+~800 words. For ICS: each VEVENT becomes one `calendar` event; a
+`RECURRENCE-ID` tags it as a reschedule so the pattern detectors already
+tuned for that behavior work on real calendars too.
 
 ### Local development (without Docker)
 
