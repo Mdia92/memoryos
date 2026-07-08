@@ -124,3 +124,47 @@ def test_reschedule_on_thursday_does_not_promote_monday_pattern(policy):
     scan_patterns(state, datetime(2026, 7, 1, tzinfo=UTC), policy)
     promoted_names = {p.name for p in state.patterns.values() if p.promoted}
     assert "monday_reschedules" not in promoted_names
+
+
+def _ev_at_hour(hour: int, day_offset: int, session: int) -> MemoryEvent:
+    return MemoryEvent(
+        id=new_id(),
+        session_id=session,
+        type="chat",
+        content="x",
+        occurred_at=datetime(2026, 6, 1, hour, 0, tzinfo=UTC) + timedelta(days=day_offset),
+        assertions=[],
+    )
+
+
+def test_peak_hour_cluster_promotes_when_late_morning_dominant(policy):
+    """>=45% of the last 20 events in one band, ≥2× the runner-up → promote."""
+    state = MemoryState()
+    events = []
+    # 10 events in late-morning (10:00–12:59)
+    for i in range(10):
+        events.append(_ev_at_hour(11, i, session=(i % 3) + 1))
+    # 4 filler afternoon events
+    for i in range(4):
+        events.append(_ev_at_hour(14, i + 10, session=3))
+    state.events = events
+    scan_patterns(state, datetime(2026, 7, 1, tzinfo=UTC), policy)
+    promoted = {p.name for p in state.patterns.values() if p.promoted}
+    assert "peak_hour_cluster" in promoted
+
+
+def test_peak_hour_cluster_does_not_promote_on_flat_distribution(policy):
+    """When events are spread evenly across bands, no single band dominates."""
+    state = MemoryState()
+    events = [
+        _ev_at_hour(8, 0, session=1),
+        _ev_at_hour(11, 1, session=1),
+        _ev_at_hour(14, 2, session=2),
+        _ev_at_hour(18, 3, session=2),
+        _ev_at_hour(8, 4, session=3),
+        _ev_at_hour(14, 5, session=3),
+    ]
+    state.events = events
+    scan_patterns(state, datetime(2026, 7, 1, tzinfo=UTC), policy)
+    promoted = {p.name for p in state.patterns.values() if p.promoted}
+    assert "peak_hour_cluster" not in promoted

@@ -107,11 +107,57 @@ def _detect_weekend_avoidance(events: list[MemoryEvent]) -> list:
     return hits
 
 
+_HOUR_BANDS: list[tuple[range, str]] = [
+    (range(6, 10), "early morning (06:00 – 09:59)"),
+    (range(10, 13), "late morning (10:00 – 12:59)"),
+    (range(13, 17), "afternoon (13:00 – 16:59)"),
+    (range(17, 21), "evening (17:00 – 20:59)"),
+]
+
+
+def _detect_peak_hour_cluster(events: list[MemoryEvent]) -> list:
+    """The user concentrates activity in one time-of-day band.
+
+    A band earns hits from *its own events* only once a band is dominant —
+    more than 45% of the last 20 events fell in that band, and it has at
+    least twice as many hits as any other band. This lets the confidence
+    formula scale with sustained evidence without one busy morning
+    fabricating a lifelong pattern.
+    """
+    if len(events) < 6:
+        return []
+    ordered = sorted(events, key=lambda e: e.occurred_at)
+    window = ordered[-20:]
+    counts: dict[str, list[MemoryEvent]] = {}
+    for band_range, label in _HOUR_BANDS:
+        counts[label] = [ev for ev in window if ev.occurred_at.hour in band_range]
+
+    ranked = sorted(counts.items(), key=lambda kv: -len(kv[1]))
+    top_label, top_hits = ranked[0]
+    second_hits = len(ranked[1][1]) if len(ranked) > 1 else 0
+
+    dominates = (
+        len(top_hits) >= max(5, len(window) * 0.45)
+        and len(top_hits) >= max(1, second_hits) * 2
+    )
+    if not dominates:
+        return []
+    return [
+        (
+            "peak_hour_cluster",
+            f"The user's activity clusters in the {top_label}.",
+            ev,
+        )
+        for ev in top_hits
+    ]
+
+
 DETECTORS: list[Detector] = [
     _detect_post_break_reschedules,
     _detect_monday_reschedules,
     _detect_late_night_activity,
     _detect_weekend_avoidance,
+    _detect_peak_hour_cluster,
 ]
 
 
