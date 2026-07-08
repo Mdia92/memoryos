@@ -1,5 +1,8 @@
 # MemoryOS
 
+[![CI](https://github.com/Mdia92/memoryos/actions/workflows/ci.yml/badge.svg)](https://github.com/Mdia92/memoryos/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **AI shouldn't remember more. It should remember correctly.**
 
 MemoryOS is an evidence-based memory agent built for the **Global AI Hackathon with Qwen Cloud — Track 1: MemoryAgent**. Most "memory" systems are retrieval systems: they store more, but they don't get smarter, and the more they store the more they hallucinate, because the model fills gaps with invention when retrieval is noisy.
