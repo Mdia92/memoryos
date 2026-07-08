@@ -1,4 +1,4 @@
-# Demo script — 3 minutes
+# Demo script — ~3 minutes
 
 Target: one continuous screen recording of the dashboard (plus a separate,
 shorter Alibaba Cloud deployment proof recording — see deploy-alibaba.md).
@@ -51,27 +51,35 @@ score. The answer cites them explicitly.
 Line: *"When we can't answer from a tracked fact, we fall back to retrieval
 over the raw event store — with citations. No hallucination surface."*
 
-**1:35 – 2:05 — The structural proof (Dashboard).**
+**1:35 – 2:00 — The structural proof (Dashboard, accuracy chart).**
 The accuracy chart: MemoryOS climbs **42% → 100%** and never dips after warm-up;
 the baseline whipsaws on noise (down to 75%) because it trusts whatever came
 last. Below it, the act-rate: 0% → 75%. Point at **"Precision when acting:
 100%"**: *"In 120 sessions across six seeds, the acting gate never once fired
 on a wrong answer. The model never changed — only the evidence accumulated."*
 
-**2:05 – 2:20 — The 80/20 that isn't a slogan (KPI row).**
+**2:00 – 2:20 — Public benchmark validation (Dashboard, LongMemEval chart).**
+Scroll to the "LongMemEval — MemoryOS vs Vanilla RAG" bar chart. Point at
+knowledge-update: MemoryOS **100%** vs RAG **80%**. Point at multi-session:
+MemoryOS **60%** vs RAG **50%**. Line: *"This isn't our synthetic data. This
+is LongMemEval, ICLR 2025, 500 public questions. On the two categories the
+MemoryAgent track brief was written about — memory that changes and memory
+that corroborates — MemoryOS beats vanilla RAG using the same Qwen models."*
+
+**2:20 – 2:35 — The 80/20 that isn't a slogan (KPI row).**
 Point at the second KPI row: **Fast-path share 99.6%**, Qwen calls 2,
-deterministic ops 485 — *for a live 20-session state*.
+deterministic ops 725 — *for a live 20-session state*.
 Line: *"The hybrid architecture isn't a marketing claim — it's a counter.
 Every call MemoryOS avoids is a token judges aren't paying for."*
 
-**2:20 – 2:40 — Unprogrammed discovery (Dashboard, patterns panel).**
-Read a promoted pattern: *"Meetings are frequently rescheduled right after
-long weekends"* — 4 supporting episodes across sessions 4, 9, 14, 17.
-Line: *"Nobody ever told it that. It was promoted only after enough sourced
-episodes agreed — that's the pattern layer's evidence bar, in the policy
-file."*
+**2:35 – 2:50 — Unprogrammed discovery (Dashboard, patterns panel).**
+Point at the promoted patterns list: **4 patterns MemoryOS discovered on its
+own** — weekend avoidance, late-night activity, post-break reschedules,
+Monday reschedules. Line: *"Nobody told it any of these. Each was promoted
+only after enough sourced episodes agreed — the pattern layer's evidence
+bar, set in the policy YAML."*
 
-**2:40 – 3:00 — Close (Ask page, side-by-side still on screen).**
+**2:50 – 3:10 — Close (Ask page, side-by-side still on screen).**
 Line: *"Traditional AI memory guesses — fluently. MemoryOS knows: every fact
 traced, every confidence earned, every contradiction surfaced. Built on Qwen
 through Alibaba Cloud, running now at http://8.219.249.248. AI shouldn't
