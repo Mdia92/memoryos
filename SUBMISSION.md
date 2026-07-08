@@ -51,6 +51,20 @@ decisions on 6 seeds), while a last-assertion-wins baseline whipsaws on
 noise and sometimes ends the run wrong. Accuracy rises because evidence
 accumulates — the model never changed.
 
+To answer "does this only work on your own synthetic data?", MemoryOS is
+also run against **LongMemEval** (ICLR 2025, MIT-licensed, 500 questions
+across 6 memory categories) with a **vanilla RAG baseline** using the same
+Qwen embeddings and answer model, so any delta is attributable to the fact
+layer, not retrieval quality. Full methodology and per-category results in
+`docs/longmemeval-results.md`. Real notes ingestion is a first-class path:
+`python -m evals.ingest_markdown --path ~/notes` folds an Obsidian vault
+into episodic memory via the same extraction pipeline.
+
+The 80/20 fast/slow split isn't marketing — the dashboard shows a live
+counter: on a 20-session seed with one question asked, 485 deterministic
+operations vs 2 Qwen calls = 99.6% fast-path. Every avoided call is a token
+judges aren't paying for.
+
 Built on Alibaba Cloud end to end: Qwen (qwen-plus → qwen-turbo →
 rules-only fallback chain) via Model Studio's DashScope OpenAI-compatible
 API handles the ~20% of work needing genuine reasoning (assertion
@@ -63,7 +77,8 @@ discovered, facts verified.
 
 ## Links to fill
 
-- Repo: `https://github.com/<user>/memoryos`
-- Demo video: `<YouTube URL>`
-- Deployment proof recording: `<URL>`
-- Live instance (optional): `http://<ecs-ip>/`
+- Repo: **https://github.com/Mdia92/memoryos**
+- Live instance: **http://8.219.249.248** (Alibaba Cloud ECS, Singapore region)
+- Alibaba Cloud usage proof file: `backend/app/qwen_client.py`
+- Demo video: `<YouTube URL — record from docs/demo-script.md>`
+- Deployment proof recording: `<URL — record from docs/deploy-alibaba.md>`

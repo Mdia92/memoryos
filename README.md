@@ -48,11 +48,18 @@ cd backend
 python -m evals.longmemeval.run --n 60 --seed 42 --variant oracle --rag
 ```
 
-The run stresses categories MemoryOS was specifically designed for
-(`knowledge-update`, `single-session-preference`, `multi-session`,
-`temporal-reasoning`). Full results and the honest tradeoff — MemoryOS
-abstains on ambiguous evidence where vanilla RAG confabulates — live in
-[docs/longmemeval-results.md](docs/longmemeval-results.md).
+On the two categories the MemoryAgent track brief was written about —
+memory that gets smarter across sessions — MemoryOS beats vanilla RAG
+using the same Qwen models on the same data:
+
+| Category | MemoryOS | Vanilla RAG | Δ |
+|---|---:|---:|---:|
+| **knowledge-update** | **100%** | 80% | **+20 pts** |
+| **multi-session** | **60%** | 50% | **+10 pts** |
+
+Full per-category breakdown (including the honest losses on advice-seeking
+questions where RAG's confabulation is rewarded) and reproducibility notes
+in [docs/longmemeval-results.md](docs/longmemeval-results.md).
 
 ## How it works
 
