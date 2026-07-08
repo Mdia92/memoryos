@@ -13,8 +13,21 @@ from datetime import datetime
 from .confidence import explain_confidence, gate_for
 from .memory.core import MemoryState
 
+# Fast-path counter: every gated decision is deterministic (zero tokens).
+# Exposed on /api/stats so the dashboard can show fast-path vs LLM ratio.
+_deterministic_decisions = [0]
+
+
+def deterministic_decision_count() -> int:
+    return _deterministic_decisions[0]
+
+
+def reset_deterministic_decisions() -> None:
+    _deterministic_decisions[0] = 0
+
 
 def decide(state: MemoryState, subject: str, key: str, now: datetime, policy: dict) -> dict:
+    _deterministic_decisions[0] += 1
     facts = state.active_facts(subject, key)
     if not facts:
         return {

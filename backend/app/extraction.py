@@ -18,14 +18,28 @@ import json
 from .fallback_chain import run_json_task, run_text_task
 from .memory.core import Assertion
 
-EXTRACTION_SYSTEM = """You extract structured preference/behavior assertions from workplace events.
+EXTRACTION_SYSTEM = """You extract stable facts about the user from a piece of text.
+
 Return JSON: {"assertions": [{"subject": "user", "key": "<snake_case_key>",
 "value": "<short value>", "statement": "<one sentence>"}]}
-Rules:
-- Only extract claims the text actually supports. Never invent.
-- Keys are stable snake_case identifiers (e.g. meeting_time_preference, report_format).
-- If the text contains no extractable claim, return {"assertions": []}.
-- If a list of known keys is provided, reuse them whenever the claim matches one."""
+
+What to extract:
+- Preferences and behaviors (e.g. meeting_time_preference=morning).
+- Biographical / durable facts about the user (e.g. degree=Business Administration,
+  city_of_residence=Berlin, employer=Acme, has_child=true).
+- Skills, tools, and habits the user asserts (e.g. primary_language=Python).
+- Explicit plans or upcoming events tied to the user, when the text makes them concrete.
+
+What NOT to extract:
+- One-off situational statements ("I'm tired today").
+- Facts about other people, unless the user is stating a relationship (spouse_name=X).
+- Anything the text does not actually support. Never invent.
+
+Formatting:
+- Keys are stable snake_case (e.g. graduated_degree, meeting_time_preference).
+- Value is short and canonical.
+- If a list of known keys is provided, reuse them whenever the claim matches one.
+- If the text contains no extractable durable fact, return {"assertions": []}."""
 
 ANSWER_SYSTEM = """You are MemoryOS, an evidence-based memory agent. Answer the user's question
 using ONLY the decision JSON provided. State the answer, the confidence, and cite the evidence

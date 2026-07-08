@@ -81,6 +81,15 @@ export interface Stats {
   contradictions_resolved: number;
   patterns_promoted: number;
   qwen_available: boolean;
+  cost?: {
+    qwen_calls: number;
+    qwen_input_tokens_est: number;
+    qwen_by_model: Record<string, number>;
+    rules_fallbacks: number;
+    deterministic_decisions: number;
+    deterministic_ops: number;
+    fast_path_pct: number;
+  };
 }
 
 export interface Decision {

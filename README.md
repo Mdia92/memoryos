@@ -33,6 +33,27 @@ python -m evals.seed_sweep                          # robustness across seeds
 
 The harness is deterministic and makes **zero LLM calls**, so every number above is reproducible bit-for-bit.
 
+### On a public benchmark — LongMemEval (ICLR 2025)
+
+To answer "does this only work on your own synthetic data?", MemoryOS is also
+run against **LongMemEval** (`xiaowu0162/longmemeval-cleaned`, MIT-licensed) —
+500 questions across 6 memory categories, using the **oracle** variant so the
+test isolates the memory pipeline from retrieval-from-noise. A **vanilla RAG
+baseline** using the same Qwen embeddings and answer model is run on the same
+sessions for comparison.
+
+```bash
+bash scripts/download_datasets.sh
+cd backend
+python -m evals.longmemeval.run --n 60 --seed 42 --variant oracle --rag
+```
+
+The run stresses categories MemoryOS was specifically designed for
+(`knowledge-update`, `single-session-preference`, `multi-session`,
+`temporal-reasoning`). Full results and the honest tradeoff — MemoryOS
+abstains on ambiguous evidence where vanilla RAG confabulates — live in
+[docs/longmemeval-results.md](docs/longmemeval-results.md).
+
 ## How it works
 
 ### Four memory layers (fast path — deterministic, ~80% of work, zero tokens)
@@ -95,6 +116,22 @@ curl -X POST localhost/api/demo/seed -H "Content-Type: application/json" -d '{"s
 ```
 
 Without a Qwen key the system still works — it falls back to deterministic rules and the UI shows `rules-only` as the provider.
+
+### Ingest your own notes
+
+Point MemoryOS at a folder of markdown files (Obsidian, Bear, plain `.md`) and
+watch it extract structured facts with full provenance:
+
+```bash
+cd backend
+python -m evals.ingest_markdown --path ~/notes --api http://localhost:8000
+# per-file output: 2026-03-15-standup.md -> qwen-plus: [primary_language=Rust]
+```
+
+Files with a `YYYY-MM-DD` prefix use that as `occurred_at`; otherwise the
+file's mtime. Frontmatter is stripped. Long files chunk at ~800 words so
+extraction sees coherent context. Every extracted fact goes through the
+normal engine — corroboration, contradiction detection, confidence, decay.
 
 ### Local development (without Docker)
 

@@ -271,9 +271,20 @@ async def audit_trail(request: Request, limit: int = 200):
 
 @router.get("/api/stats")
 async def stats(request: Request):
+    from ..decision import deterministic_decision_count
+    from ..fallback_chain import counter as slow_counter
+
     state = _state(request)
     active = state.active_facts()
     corroborated = [f for f in active if f.distinct_origins >= 2]
+    slow = slow_counter.snapshot()
+    det_decisions = deterministic_decision_count()
+    # Each event flows through 4 deterministic passes (episodic, semantic,
+    # decay+auditor, verification+pattern). Each decide() is another. The
+    # rules_fallbacks are Qwen invocations we intentionally routed away from.
+    det_ops = len(state.events) * 4 + det_decisions + slow["rules_fallbacks"]
+    total_ops = det_ops + slow["qwen_calls"]
+    fast_path_pct = round(det_ops / total_ops, 4) if total_ops else 0.0
     return {
         "events_total": len(state.events),
         "facts_active": len(active),
@@ -291,6 +302,15 @@ async def stats(request: Request):
         ),
         "patterns_promoted": sum(1 for p in state.patterns.values() if p.promoted),
         "qwen_available": qwen_available(),
+        "cost": {
+            "qwen_calls": slow["qwen_calls"],
+            "qwen_input_tokens_est": slow["qwen_input_tokens_est"],
+            "qwen_by_model": slow["by_model"],
+            "rules_fallbacks": slow["rules_fallbacks"],
+            "deterministic_decisions": det_decisions,
+            "deterministic_ops": det_ops,
+            "fast_path_pct": fast_path_pct,
+        },
     }
 
 
@@ -426,8 +446,13 @@ async def demo_seed(request: Request, body: SeedIn):
 
 @router.post("/api/demo/reset")
 async def demo_reset(request: Request):
+    from ..decision import reset_deterministic_decisions
+    from ..fallback_chain import counter as slow_counter
+
     async with request.app.state.lock:
         request.app.state.memory = MemoryState()
+        slow_counter.reset()
+        reset_deterministic_decisions()
         await _persist(request)
     bus.publish({"type": "memory_reset"})
     return {"status": "reset"}

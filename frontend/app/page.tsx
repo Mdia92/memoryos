@@ -136,6 +136,31 @@ export default function Dashboard() {
         />
       </div>
 
+      {stats?.cost ? (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <Kpi
+            label="Fast-path share"
+            value={pct(stats.cost.fast_path_pct)}
+            tone="accent"
+          />
+          <Kpi
+            label="Qwen calls"
+            value={stats.cost.qwen_calls}
+            tone="info"
+          />
+          <Kpi
+            label="Deterministic ops"
+            value={stats.cost.deterministic_ops}
+            tone="default"
+          />
+          <Kpi
+            label="Est. input tokens"
+            value={stats.cost.qwen_input_tokens_est.toLocaleString()}
+            tone="warn"
+          />
+        </div>
+      ) : null}
+
       <section className="card p-5">
         <SectionTitle sub="MemoryOS vs last-assertion-wins baseline on an identical, seeded synthetic dataset — 12 tasks per session, ground truth includes two mid-run preference changes.">
           Decision accuracy across sessions

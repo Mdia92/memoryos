@@ -31,3 +31,12 @@ Thumbs.db
 *.db
 pgdata/
 eval_output/
+
+# SSH keys — never commit private keys
+*.pem
+*.key
+
+# LongMemEval dataset (277MB, download via scripts/download_datasets.sh)
+backend/evals/data/longmemeval_*.json
+# Eval result files (regenerable — checked-in summaries live in docs/)
+backend/evals/data/*.jsonl
