@@ -1,7 +1,9 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends curl \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && groupadd --gid 1001 memoryos \
+    && useradd --uid 1001 --gid memoryos --create-home --shell /usr/sbin/nologin memoryos
 
 WORKDIR /srv/memoryos
 
@@ -10,8 +12,10 @@ COPY backend/app backend/app
 COPY backend/evals backend/evals
 COPY backend/config backend/config
 
-RUN pip install --no-cache-dir ./backend
+RUN pip install --no-cache-dir ./backend \
+    && chown -R memoryos:memoryos /srv/memoryos
 
+USER memoryos
 WORKDIR /srv/memoryos/backend
 EXPOSE 8000
 
