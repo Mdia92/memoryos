@@ -82,11 +82,17 @@ into episodic memory, and `python -m evals.ingest_ics --path
 event, RECURRENCE-ID → pattern-eligible reschedule). Anyone can point
 MemoryOS at their own data in one command.
 
-Engineering hygiene the repo carries: 37 tests (unit + API + pattern
-detectors), ruff-clean, GitHub Actions CI running on every push (badge
-green), Docker HEALTHCHECK on the backend, and a `bash
-scripts/reproduce_all.sh` script that verifies every claim in this
-description end-to-end in about five minutes.
+Engineering hygiene the repo carries: **83 tests** covering the four
+memory layers, the confidence formula, the auditor's timeline-aware
+resolution, five pattern detectors, the extraction fallback rules, both
+ingestion parsers, and every API route including the `/api/export`
+data-portability endpoint. Ruff-clean. GitHub Actions CI runs on every
+push (badge green in the README). Backend Docker container ships with a
+HEALTHCHECK and runs as a non-root user; nginx enforces gzip +
+X-Content-Type-Options + X-Frame-Options + Referrer-Policy +
+Permissions-Policy on every response. `bash scripts/reproduce_all.sh`
+verifies every claim in this description end-to-end in about five
+minutes.
 
 ## Links to fill
 

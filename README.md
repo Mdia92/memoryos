@@ -71,7 +71,7 @@ use RAG / Mem0 / LangGraph: [docs/comparison.md](docs/comparison.md).
 
 1. **Episodic** (`app/memory/episodic.py`) — raw events recorded with full provenance. Nothing is interpreted.
 2. **Semantic** (`app/memory/semantic.py`) — duplicate facts merge, and their sources merge with them. Disagreeing values are *not* overwritten; they coexist as competing facts until audited. A value the auditor once superseded regains its evidence chain if the world re-asserts it.
-3. **Pattern** (`app/memory/pattern.py`) — deterministic detectors over episodes; a pattern is promoted to trusted knowledge only when ≥3 sourced episodes across ≥2 sessions agree. This is where unprogrammed discovery happens ("meetings get rescheduled right after long weekends" — nobody ever said that).
+3. **Pattern** (`app/memory/pattern.py`) — five deterministic detectors over episodes (post-break reschedules, Monday reschedules, late-night activity, weekend avoidance, peak-hour cluster); a pattern is promoted to trusted knowledge only when ≥3 sourced episodes across ≥2 sessions agree. This is where unprogrammed discovery happens ("meetings get rescheduled right after long weekends" — nobody ever said that).
 4. **Decay** (`app/memory/decay.py`) — a single-source memory has a 6-month half-life; a multi-source one, 18 months. Uncorroborated claims fade; corroborated ones endure.
 
 ### The confidence formula (`app/confidence.py`)
@@ -196,7 +196,7 @@ npm install
 npm run dev -- --port 3002       # → http://localhost:3002
 ```
 
-Tests: `cd backend && pytest` (22 unit tests on confidence math, decay, merging, and auditor behavior). Lint: `ruff check backend`.
+Tests: `cd backend && pytest` (83 tests covering the four memory layers, the confidence formula, the auditor, five pattern detectors, the extraction fallback rules, both ingesters, and every API route). Lint: `ruff check backend`.
 
 ## Docs
 
