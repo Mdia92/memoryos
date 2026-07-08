@@ -319,6 +319,8 @@ async def stats(request: Request):
 
 @router.post("/api/ask")
 async def ask(request: Request, body: AskIn):
+    from ..retrieval import hybrid_answer
+
     state = _state(request)
     policy = get_policy()
     now = _now()
@@ -329,26 +331,54 @@ async def ask(request: Request, body: AskIn):
     key, mapping_provider = await map_question_to_key(
         body.question, _known_keys(state), key_values
     )
-    if key is None:
-        return {
+
+    # Tracked-fact path (evidence auditor + confidence gate) if we hit a key.
+    if key is not None:
+        decision = decide(state, "user", key, now, policy)
+        answer, answer_provider = await phrase_answer(body.question, decision)
+        response = {
+            "question": body.question,
+            "key": key,
+            "answer": answer,
+            "decision": decision,
+            "path": "tracked-fact",
+            "providers": {"mapping": mapping_provider, "answer": answer_provider},
+        }
+    else:
+        # Hybrid retrieval fallback: no tracked key, but events may still hold
+        # the answer. Semantic search + Qwen answers over cited events only.
+        h_answer, evidence, r_provider, a_provider = await hybrid_answer(
+            state, body.question, k=5
+        )
+        response = {
             "question": body.question,
             "key": None,
-            "answer": "I don't hold any memory related to that question yet.",
-            "decision": None,
-            "baseline": None,
-            "providers": {"mapping": mapping_provider},
+            "answer": h_answer,
+            "decision": {
+                "key": None,
+                "value": None,
+                "gate": "show_sources" if evidence else "ask",
+                "confidence": None,
+                "reason": "no tracked fact; answered from retrieved events",
+                "evidence": [
+                    {
+                        "event_id": r.event.id,
+                        "origin": r.event.type,
+                        "occurred_at": r.event.occurred_at.isoformat(),
+                        "excerpt": (r.event.content or "")[:200],
+                        "similarity": round(r.score, 3),
+                    }
+                    for r in evidence
+                ],
+            },
+            "path": "hybrid-retrieval" if evidence else "abstain",
+            "providers": {
+                "mapping": mapping_provider,
+                "retrieval": r_provider,
+                "answer": a_provider,
+            },
         }
-
-    decision = decide(state, "user", key, now, policy)
-    answer, answer_provider = await phrase_answer(body.question, decision)
-    response = {
-        "question": body.question,
-        "key": key,
-        "answer": answer,
-        "decision": decision,
-        "providers": {"mapping": mapping_provider, "answer": answer_provider},
-    }
-    if body.compare:
+    if body.compare and key is not None:
         base = baseline_answer(state.events, "user", key)
         response["baseline"] = {
             **base,
