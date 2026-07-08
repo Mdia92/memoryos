@@ -124,6 +124,22 @@ curl -X POST localhost/api/demo/seed -H "Content-Type: application/json" -d '{"s
 
 Without a Qwen key the system still works — it falls back to deterministic rules and the UI shows `rules-only` as the provider.
 
+### One-command end-to-end demo
+
+Prove the whole thesis in under 30 seconds against any deployment
+(local or the live ECS URL):
+
+```bash
+cd backend
+python -m evals.demo --api http://8.219.249.248
+# or: MEMORYOS_API=http://... python -m evals.demo
+```
+
+Prints: the 42% → 100% accuracy curve, precision-when-acting 100%,
+three ask-panel scenes (tracked fact, hybrid retrieval, honest abstention),
+four unprogrammed patterns discovered, and the live fast-path counter
+(typically 99%+).
+
 ### Ingest your own data
 
 Two real-world adapters ship in `backend/evals/`. Both go through the same

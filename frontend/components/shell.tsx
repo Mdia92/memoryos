@@ -5,8 +5,18 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { api, type Stats } from "@/lib/api";
+import { api, API_URL, type Stats } from "@/lib/api";
 import { useStream, type Notification } from "@/lib/useStream";
+
+function displayHost() {
+  try {
+    if (typeof window !== "undefined" && !API_URL) return window.location.host;
+    const u = new URL(API_URL);
+    return u.host;
+  } catch {
+    return "localhost";
+  }
+}
 
 const NAV = [
   { href: "/", label: "Dashboard", icon: "◧" },
@@ -108,6 +118,9 @@ export function Shell({ children }: { children: React.ReactNode }) {
               className={`live-dot size-1.5 rounded-full ${connected ? "bg-accent" : "bg-danger"}`}
             />
             {connected ? "live stream" : "stream offline"}
+          </div>
+          <div className="mono text-[9px] leading-tight text-muted">
+            deployed · {displayHost()}
           </div>
         </div>
       </aside>

@@ -47,6 +47,12 @@ const prettyCategory = (c: string) =>
 
 const pct = (v: number) => `${Math.round(v * 100)}%`;
 
+function shortNumber(n: number): string {
+  if (n < 1000) return String(n);
+  if (n < 1_000_000) return `${(n / 1000).toFixed(n < 10_000 ? 1 : 0)}k`;
+  return `${(n / 1_000_000).toFixed(1)}M`;
+}
+
 function ChartTooltip({
   active,
   payload,
@@ -186,7 +192,7 @@ export default function Dashboard() {
           />
           <Kpi
             label="Est. input tokens"
-            value={stats.cost.qwen_input_tokens_est.toLocaleString()}
+            value={shortNumber(stats.cost.qwen_input_tokens_est)}
             tone="warn"
           />
         </div>
