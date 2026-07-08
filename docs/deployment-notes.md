@@ -70,7 +70,16 @@ python -m evals.ingest_markdown --path ~/notes --api $API
 python -m evals.ingest_ics --path ~/calendar.ics --api $API
 ```
 
-**Backup:**
+**Backup (portable JSON — the recommended path):**
+```bash
+curl -s $API/api/export > memoryos-export-$(date +%F).json
+```
+No lock-in: `/api/export` dumps every event, fact, contradiction, pattern,
+and audit entry as a stable JSON. You can pipe it into `jq`, re-ingest it
+into another MemoryOS instance via `/api/events` (each event carries its
+`occurred_at`, `assertions`, and `meta`), or archive it forever.
+
+**Backup (SQL dump — for pg_restore):**
 ```bash
 docker compose -f deploy/docker-compose.prod.yml exec -T db \
   pg_dump -U memoryos memoryos > memoryos-backup-$(date +%F).sql

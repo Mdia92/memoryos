@@ -148,3 +148,41 @@ def test_ask_baseline_only_for_tracked_fact(client, monkeypatch):
     assert r.status_code == 200
     body = r.json()
     assert "baseline" not in body
+
+
+def test_export_contains_full_state(client):
+    """/api/export dumps every event/fact/pattern/contradiction/audit entry."""
+    client.post("/api/demo/seed", json={"sessions": 10})
+    r = client.get("/api/export")
+    assert r.status_code == 200
+    body = r.json()
+
+    for section in ("meta", "events", "facts", "contradictions", "patterns", "audit"):
+        assert section in body, f"export missing {section}"
+
+    counts = body["meta"]["counts"]
+    assert counts["events"] == len(body["events"]) > 0
+    assert counts["facts"] == len(body["facts"]) > 0
+    assert counts["audit_entries"] == len(body["audit"])
+
+    # Every event carries provenance fields required downstream.
+    for e in body["events"]:
+        assert {"id", "session_id", "type", "content", "occurred_at", "assertions"} <= set(
+            e.keys()
+        )
+
+    # Every fact carries the confidence breakdown so external tools can
+    # recompute the score by hand.
+    for f in body["facts"]:
+        assert "breakdown" in f
+        assert "sources" in f
+
+
+def test_export_on_empty_memory(client):
+    """A fresh instance still returns a valid export skeleton."""
+    r = client.get("/api/export")
+    assert r.status_code == 200
+    body = r.json()
+    assert body["meta"]["counts"]["events"] == 0
+    assert body["events"] == []
+    assert body["facts"] == []

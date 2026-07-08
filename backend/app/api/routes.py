@@ -269,6 +269,78 @@ async def audit_trail(request: Request, limit: int = 200):
     ]
 
 
+@router.get("/api/export")
+async def export_state(request: Request):
+    """Full memory export — every event, fact, pattern, contradiction, and
+    audit entry. Ready for backup, migration, or offline inspection.
+
+    No lock-in: everything MemoryOS knows is right here in a stable JSON.
+    """
+    state = _state(request)
+    policy = get_policy()
+    now = _now()
+    return {
+        "meta": {
+            "exported_at": now.isoformat(),
+            "policy_version": policy.get("version", "unversioned"),
+            "counts": {
+                "events": len(state.events),
+                "facts": len(state.facts),
+                "active_facts": len(state.active_facts()),
+                "contradictions": len(state.contradictions),
+                "patterns": len(state.patterns),
+                "audit_entries": len(state.audit),
+            },
+        },
+        "events": [
+            {
+                "id": e.id,
+                "session_id": e.session_id,
+                "type": e.type,
+                "content": e.content,
+                "occurred_at": e.occurred_at.isoformat(),
+                "assertions": [
+                    {"key": a.key, "value": a.value, "statement": a.statement}
+                    for a in e.assertions
+                ],
+                "meta": e.meta,
+            }
+            for e in sorted(state.events, key=lambda e: e.occurred_at)
+        ],
+        "facts": [_fact_payload(state, f, policy, now) for f in state.facts.values()],
+        "contradictions": [
+            {
+                "id": c.id,
+                "subject": c.subject,
+                "key": c.key,
+                "status": c.status,
+                "resolution": c.resolution,
+                "detected_at": c.detected_at.isoformat(),
+                "resolved_at": c.resolved_at.isoformat() if c.resolved_at else None,
+                "fact_a_id": c.fact_a_id,
+                "fact_b_id": c.fact_b_id,
+            }
+            for c in state.contradictions.values()
+        ],
+        "patterns": [
+            {
+                "id": p.id,
+                "name": p.name,
+                "description": p.description,
+                "promoted": p.promoted,
+                "confidence": p.confidence,
+                "sessions": p.sessions,
+                "support_event_ids": p.support_event_ids,
+            }
+            for p in state.patterns.values()
+        ],
+        "audit": [
+            {"ts": a.ts.isoformat(), "actor": a.actor, "action": a.action, "detail": a.detail}
+            for a in state.audit
+        ],
+    }
+
+
 @router.get("/api/stats")
 async def stats(request: Request):
     from ..decision import deterministic_decision_count
