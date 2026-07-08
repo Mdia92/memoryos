@@ -110,12 +110,44 @@ function FactCard({ fact }: { fact: Fact }) {
   );
 }
 
+type SortBy = "confidence" | "recent" | "sources" | "key";
+
+function sortFacts(facts: Fact[], by: SortBy): Fact[] {
+  const copy = [...facts];
+  switch (by) {
+    case "confidence":
+      return copy.sort((a, b) => b.confidence - a.confidence);
+    case "sources":
+      return copy.sort((a, b) => b.sources.length - a.sources.length);
+    case "recent":
+      return copy.sort((a, b) => {
+        const aT = a.last_supported ? new Date(a.last_supported).getTime() : 0;
+        const bT = b.last_supported ? new Date(b.last_supported).getTime() : 0;
+        return bT - aT;
+      });
+    case "key":
+      return copy.sort((a, b) => a.key.localeCompare(b.key));
+  }
+}
+
+function FactSkeleton() {
+  return (
+    <div className="card animate-pulse px-4 py-3">
+      <div className="h-4 w-2/3 rounded bg-panel-2" />
+      <div className="mt-2 h-3 w-1/3 rounded bg-panel-2" />
+    </div>
+  );
+}
+
 export default function MemoryPage() {
   const [facts, setFacts] = useState<Fact[]>([]);
   const [showAll, setShowAll] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<SortBy>("confidence");
 
   useEffect(() => {
+    setLoaded(false);
     api
       .facts(showAll)
       .then(setFacts)
@@ -123,9 +155,20 @@ export default function MemoryPage() {
       .finally(() => setLoaded(true));
   }, [showAll]);
 
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? facts.filter(
+        (f) =>
+          f.statement.toLowerCase().includes(q) ||
+          f.key.toLowerCase().includes(q) ||
+          f.value.toLowerCase().includes(q),
+      )
+    : facts;
+  const ordered = sortFacts(filtered, sortBy);
+
   return (
     <div className="mx-auto max-w-4xl space-y-5">
-      <header className="flex items-end justify-between gap-3">
+      <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Semantic memory</h1>
           <p className="mt-1 text-sm text-muted">
@@ -143,21 +186,59 @@ export default function MemoryPage() {
         </label>
       </header>
 
-      {facts.length ? (
+      {loaded && facts.length > 0 ? (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Filter by key, value, or statement…"
+            className="card min-w-[220px] flex-1 px-3 py-2 text-xs outline-none transition-colors placeholder:text-muted focus:border-accent/50"
+          />
+          <div className="flex items-center gap-1 text-[11px] text-muted">
+            <span>Sort:</span>
+            {(["confidence", "recent", "sources", "key"] as SortBy[]).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSortBy(s)}
+                className={`mono rounded-md border px-2 py-0.5 transition-colors ${
+                  sortBy === s
+                    ? "border-accent/40 bg-accent/10 text-accent"
+                    : "border-line hover:border-accent/30"
+                }`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <span className="mono ml-auto text-[11px] text-muted">
+            {ordered.length} of {facts.length}
+          </span>
+        </div>
+      ) : null}
+
+      {!loaded ? (
         <div className="space-y-2.5">
-          {facts.map((f) => (
+          <FactSkeleton />
+          <FactSkeleton />
+          <FactSkeleton />
+        </div>
+      ) : ordered.length ? (
+        <div className="space-y-2.5">
+          {ordered.map((f) => (
             <FactCard key={f.id} fact={f} />
           ))}
         </div>
+      ) : facts.length ? (
+        <div className="card px-5 py-10 text-center text-sm text-muted">
+          No facts match &ldquo;{query}&rdquo;. Try a different search or clear the filter.
+        </div>
       ) : (
         <div className="card px-5 py-10 text-center text-sm text-muted">
-          {loaded
-            ? "Memory is empty — seed it from the Ask page or ingest events via the API."
-            : "Loading…"}
+          Memory is empty — seed it from the Ask page or ingest events via the API.
         </div>
       )}
 
-      {facts.length ? (
+      {ordered.length ? (
         <div className="pb-4 pt-1">
           <SectionTitle>Reading the ledger</SectionTitle>
           <ul className="grid gap-2 text-xs text-muted md:grid-cols-3">

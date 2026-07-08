@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Shell } from "@/components/shell";
 
 const geistSans = Geist({
@@ -30,7 +31,9 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="page-glow min-h-full">
-        <Shell>{children}</Shell>
+        <ErrorBoundary>
+          <Shell>{children}</Shell>
+        </ErrorBoundary>
       </body>
     </html>
   );
