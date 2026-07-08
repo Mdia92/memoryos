@@ -62,7 +62,8 @@ using the same Qwen models on the same data:
 
 Full per-category breakdown (including the honest losses on advice-seeking
 questions where RAG's confabulation is rewarded) and reproducibility notes
-in [docs/longmemeval-results.md](docs/longmemeval-results.md).
+in [docs/longmemeval-results.md](docs/longmemeval-results.md). Why not just
+use RAG / Mem0 / LangGraph: [docs/comparison.md](docs/comparison.md).
 
 ## How it works
 
