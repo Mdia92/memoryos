@@ -128,6 +128,17 @@ curl -X POST localhost/api/demo/seed -H "Content-Type: application/json" -d '{"s
 
 Without a Qwen key the system still works — it falls back to deterministic rules and the UI shows `rules-only` as the provider.
 
+### Reproduce every claim in this README
+
+```bash
+bash scripts/reproduce_all.sh
+```
+
+Runs the 37-test suite, the deterministic 20-session accuracy curve, the
+6-seed robustness sweep, brings up the full docker stack, runs the demo
+CLI end-to-end, and executes a 20-instance LongMemEval comparison vs RAG.
+About 5 minutes total.
+
 ### One-command end-to-end demo
 
 Prove the whole thesis in under 30 seconds against any deployment
