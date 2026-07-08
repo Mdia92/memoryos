@@ -208,6 +208,7 @@ Tests: `cd backend && pytest` (22 unit tests on confidence math, decay, merging,
 - [docs/longmemeval-results.md](docs/longmemeval-results.md) — per-category benchmark breakdown
 - [docs/eval-methodology.md](docs/eval-methodology.md) — dataset design, metrics, threats to validity
 - [docs/demo-script.md](docs/demo-script.md) — the ~3 min video storyboard
+- [docs/recording-checklist.md](docs/recording-checklist.md) — pre/during/post-recording playbook
 - [docs/blog-post.md](docs/blog-post.md) — publishable write-up on the evidence-vs-retrieval thesis
 
 ## Alibaba Cloud deployment
