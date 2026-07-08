@@ -200,6 +200,7 @@ Tests: `cd backend && pytest` (22 unit tests on confidence math, decay, merging,
 
 ## Docs
 
+- [docs/internals.md](docs/internals.md) — one event's journey through the engine, with file:line pointers
 - [docs/deploy-alibaba.md](docs/deploy-alibaba.md) — end-to-end Alibaba Cloud walkthrough
 - [docs/deployment-notes.md](docs/deployment-notes.md) — env vars, docker commands, backups, cost expectations
 - [docs/security.md](docs/security.md) — data flow, key handling, prompt-injection surface, prototype scope
